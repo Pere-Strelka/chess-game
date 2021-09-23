@@ -4,7 +4,6 @@
 
 Board::Board(QWidget *parent) : QWidget(parent), _painter{ new QPainter() }
 {
-    std::ios::sync_with_stdio(false);
     _lightTextColor = QColor(220, 221, 225);
     _background = QBrush(QColor(47, 54, 64));
     _whiteColor = QColor(210, 218, 226);
@@ -44,18 +43,14 @@ void Board::squarePressed(Square *sqr, QMouseEvent *event)
                 /* is move attacking */ (id == ID::NoID ? false : true), id));
     };
 
-    auto processEnPessant = [&sqr, this, &processMove] () {
+    auto processEnPessant = [&sqr, this] () {
         EnPessant *epCase = &_condition.enPessant();
-        if (!epCase->isNull() && sqr->x() == epCase->x() && _condition.selected() == epCase->pawn()) {
-            sqr->getPieceFrom(_condition.selected());
-            unsigned int id = epCase->target()->id();
-            epCase->target()->removePiece();
-            _history.push_back(Move(_condition.selected()->coords(), _matrix(sqr->x(), sqr->y()).coords(),
+        unsigned int id = epCase->target()->id();
+        epCase->target()->removePiece();
+        _history.push_back(Move(_condition.selected()->coords(), _matrix(sqr->x(), sqr->y()).coords(),
                     _matrix(sqr->x(), sqr->y()).piece(), _matrix(sqr->x(), sqr->y()).id(),
                     /* is move attacking */ true, id));
-            _history.last().setEnPessant();
-        } else if (_condition.availableSquaresFor( _condition.selected() ).contains(sqr))
-            processMove();
+        _history.last().setEnPessant();
     };
 
     auto processCastles = [&sqr, this] () {
@@ -77,8 +72,21 @@ void Board::squarePressed(Square *sqr, QMouseEvent *event)
 
     // this block processes move and calls BoardCondition::processBoard() or sets the selected square if there's no yet
     if (_condition.isSquareSelected() && _condition.availableSquaresFor(_condition.selected()).contains(sqr)) {
-        if (_condition.selected()->piece()->type() == Piece::Type::Pawn)
-            processEnPessant();
+        if (_condition.selected()->piece()->type() == Piece::Type::Pawn) {
+            if (!_condition.enPessant().isNull() && sqr->x() == _condition.enPessant().x() &&
+                _condition.selected() == _condition.enPessant().pawn())
+                processEnPessant();
+            else {
+                processMove();
+                if (sqr->y() == (sqr->piece()->side() == Side::White ? g_bFirstLine : g_wFirstLine)) {
+                    PieceMaker maker(_pack);
+                    _pieceHolder.push_back(maker.make(Piece::Type::Queen, sqr->piece()->side()));
+                    auto it = _pieceHolder.end();
+                    std::advance(it, -1);
+                    sqr->changePieceTo((*it).get());
+                }
+            }
+        }
         else if (_condition.selected()->piece()->type() == Piece::Type::King && (sqr->x() == 0 || sqr->x() == 7) &&
                  (_condition.isLongCastlesPossibleFor(_condition.selected()->piece()->side()) ||
                  _condition.isShortCastlesPossibleFor(_condition.selected()->piece()->side())))
@@ -94,8 +102,16 @@ void Board::squarePressed(Square *sqr, QMouseEvent *event)
 
 void Board::processCheckmate(Side won)
 {
-    _gameOverText = won == Side::White ? "White " : "Black ";
-    _gameOverText += "wins!";
+    switch (won)
+    {
+    case Side::White:
+        _gameOverText = "White wins!";
+        return;
+    case Side::Black:
+        _gameOverText = "Black wins!";
+    case Side::None:
+        _gameOverText = "Stalemate";
+    }
 }
 
 void Board::mousePressEvent(QMouseEvent *event)
@@ -227,6 +243,7 @@ void Board::paint(QPainter *painter, QPaintEvent *event)
 void Board::initPieces()
 {
     PieceMaker pieceMaker(_pack);
+
     for (int i = 0; i < 2; i++) {
         short yForPieces =  i ? g_bFirstLine : g_wFirstLine;
         short yForPawns =   i ? g_bSecondLine : g_wSecondLine;
