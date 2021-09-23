@@ -237,6 +237,14 @@ void BoardCondition::processBoard(ChessMatrix &matrix, Move *last)
     if (_lastMove != nullptr) {
         if (_lastMove->isAttacking()) {
             _pieces.erase(_lastMove->lostPieceID());
+            if (_lastMove->lostPieceID() == _wShortRockID)
+                _wShortRockID = ID::NoID;
+            if (_lastMove->lostPieceID() == _wLongRockID)
+                _wLongRockID = ID::NoID;
+            if (_lastMove->lostPieceID() == _bShortRockID)
+                _bShortRockID = ID::NoID;
+            if (_lastMove->lostPieceID() == _bLongRockID)
+                _bLongRockID = ID::NoID;
         }
         if (_lastMove->isLongCastles() || _lastMove->isShortCastles()) {
             short y = _lastMove->side() == Side::White ? g_wFirstLine : g_bFirstLine;
