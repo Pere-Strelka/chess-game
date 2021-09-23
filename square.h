@@ -42,6 +42,7 @@ public:
     // this function returns id of this square's previous piece if there was one and ID::NoID if there wasn't
     unsigned int getPieceFrom(Square *other);
     void removePiece();
+    void changePieceTo(Piece *piece) { if (_hasPiece) _piece = piece; else setPiece(piece); }
 
     bool operator!=(const Square *other) const;
     void operator=(Square other);

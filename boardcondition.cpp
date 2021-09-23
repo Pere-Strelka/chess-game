@@ -7,9 +7,10 @@ BoardCondition::BoardCondition()
       _bLongCastlesPossible{ false }, _bShortCastlesPossible{ false },
       _wKingMoved{ false }, _bKingMoved{ false },
       _wLongRockMoved{ false }, _wShortRockMoved{ false },
-      _bLongRockMoved{ false }, _bShortRockMoved{ false }
-
-
+      _bLongRockMoved{ false }, _bShortRockMoved{ false },
+      _wKingID{ ID::NoID }, _bKingID{ ID::NoID },
+      _wLongRockID{ ID::NoID }, _wShortRockID{ ID::NoID },
+      _bLongRockID{ ID::NoID }, _bShortRockID{ ID::NoID }
 {}
 
 void BoardCondition::setSelected(Square *sqr)
@@ -181,52 +182,55 @@ void BoardCondition::processBoard(ChessMatrix &matrix, Move *last)
             return true;
         };
 
-            if (_lastMove->pieceID() == _wKingID) {
-                _wKingMoved = true;
-                _wShortCastlesPossible = false;
-                _wLongCastlesPossible = false;
-            } else if (_lastMove->pieceID() == _bKingID) {
-                _bKingMoved = true;
-                _bShortCastlesPossible = false;
-                _bLongCastlesPossible = false;
-                return;
-            } else if (_lastMove->pieceID() == _wLongRockID) {
-                _wLongRockMoved = true;
-                _wLongCastlesPossible = false;
-            } else if (_lastMove->pieceID() == _wShortRockID) {
-                _wShortRockMoved = true;
-                _wShortCastlesPossible = false;
-            } else if (_lastMove->pieceID() == _bLongRockID) {
-                _bLongRockMoved = true;
-                _bLongCastlesPossible = false;
-            } else if (_lastMove->pieceID() == _bShortRockID) {
-                _bShortRockMoved = true;
-                _bShortCastlesPossible = false;
-            }
+        if (_lastMove->pieceID() == _wKingID) {
+            _wKingMoved = true;
+            _wShortCastlesPossible = false;
+            _wLongCastlesPossible = false;
+        } else if (_lastMove->pieceID() == _bKingID) {
+            _bKingMoved = true;
+            _bShortCastlesPossible = false;
+            _bLongCastlesPossible = false;
+        }
+        if (_lastMove->pieceID() == _wLongRockID || _wLongRockID == ID::NoID) {
+            _wLongRockMoved = true;
+            _wLongCastlesPossible = false;
+        }
+        if (_lastMove->pieceID() == _wShortRockID || _wShortRockID == ID::NoID) {
+            _wShortRockMoved = true;
+            _wShortCastlesPossible = false;
+        }
+        if (_lastMove->pieceID() == _bLongRockID || _bLongRockID == ID::NoID) {
+            _bLongRockMoved = true;
+            _bLongCastlesPossible = false;
+        }
+        if (_lastMove->pieceID() == _bShortRockID || _bShortRockID == ID::NoID) {
+            _bShortRockMoved = true;
+            _bShortCastlesPossible = false;
+        }
 
-            if (!_wLongRockMoved && !_wKingMoved && !_wKingUnderCheck &&
-                areSquaresEmtpyAndSafeFor(Side::White, /* from x */ 1, /* to x */ 3, /* y = */ g_wFirstLine))
-                _wLongCastlesPossible = true;
-            else
-                _wLongCastlesPossible = false;
+        if (!_wLongRockMoved && !_wKingMoved && !_wKingUnderCheck &&
+            areSquaresEmtpyAndSafeFor(Side::White, /* from x */ 1, /* to x */ 3, /* y = */ g_wFirstLine))
+            _wLongCastlesPossible = true;
+        else
+            _wLongCastlesPossible = false;
 
-            if (!_wShortRockMoved && !_wKingMoved && !_wKingUnderCheck &&
-                areSquaresEmtpyAndSafeFor(Side::White, /* from x */ 5, /* to x */ 6, /* y = */ g_wFirstLine))
-                _wShortCastlesPossible = true;
-            else
-                _wShortCastlesPossible = false;
+        if (!_wShortRockMoved && !_wKingMoved && !_wKingUnderCheck &&
+            areSquaresEmtpyAndSafeFor(Side::White, /* from x */ 5, /* to x */ 6, /* y = */ g_wFirstLine))
+            _wShortCastlesPossible = true;
+        else
+            _wShortCastlesPossible = false;
 
-            if (!_bLongRockMoved && !_bKingMoved && !_bKingUnderCheck &&
-                areSquaresEmtpyAndSafeFor(Side::Black, /* from x */ 1, /* to x */ 3, /* y = */ g_bFirstLine))
-                _bLongCastlesPossible = true;
-            else
-                _bLongCastlesPossible = false;
+        if (!_bLongRockMoved && !_bKingMoved && !_bKingUnderCheck &&
+            areSquaresEmtpyAndSafeFor(Side::Black, /* from x */ 1, /* to x */ 3, /* y = */ g_bFirstLine))
+            _bLongCastlesPossible = true;
+        else
+            _bLongCastlesPossible = false;
 
-            if (!_bShortRockMoved && !_bKingMoved && !_bKingUnderCheck &&
-                areSquaresEmtpyAndSafeFor(Side::Black, /* from x */ 5, /* to x */ 6, /* y = */ g_bFirstLine))
-                _bShortCastlesPossible = true;
-            else
-                _bShortCastlesPossible = false;
+        if (!_bShortRockMoved && !_bKingMoved && !_bKingUnderCheck &&
+            areSquaresEmtpyAndSafeFor(Side::Black, /* from x */ 5, /* to x */ 6, /* y = */ g_bFirstLine))
+            _bShortCastlesPossible = true;
+        else
+            _bShortCastlesPossible = false;
     };
 
     // this block changes _pieces according to the last move
@@ -312,24 +316,25 @@ void BoardCondition::processBoard(ChessMatrix &matrix, Move *last)
     if (_bLongCastlesPossible)
         _availableSquares[_bKingID].append(_pieces[_bLongRockID]);
 
-    // this block detects checkmate
+    // this block detects checkmate and draw
     if (last != nullptr) {
+        auto noAvailableMoves = [this] (Side kingSide) {
+            for (auto each : _pieces) {
+                if (each.second->piece()->side() != kingSide)
+                    continue;
+                if (!_availableSquares[each.first].isEmpty())
+                    return false;
+            }
+            return true;
+        };
+
         if (_wKingUnderCheck || _bKingUnderCheck) {
             Side kingSide = _wKingUnderCheck ? Side::White : Side::Black;
             last->setCheck();
 
             unsigned int checkedKingID = _wKingUnderCheck ? _wKingID : _bKingID;
             if (_availableSquares[checkedKingID].isEmpty()) {
-                auto noAvailableMoves = [this, &kingSide] () {
-                    for (auto each : _pieces) {
-                        if (each.second->piece()->side() != kingSide)
-                            continue;
-                        if (!_availableSquares[each.first].isEmpty())
-                            return false;
-                    }
-                    return true;
-                };
-                if (noAvailableMoves()) {
+                if (noAvailableMoves(kingSide)) {
                     last->setCheckmate();
                     if (_wKingUnderCheck)
                         _bCheckmate = true;
@@ -338,6 +343,10 @@ void BoardCondition::processBoard(ChessMatrix &matrix, Move *last)
                     emit gameOver(_wKingUnderCheck ? Side::Black : Side::White);
                 }
             }
+        } else if (noAvailableMoves(Side::White) || noAvailableMoves(Side::Black)) {
+            _bCheckmate = true;
+            _wCheckmate = true;
+            emit gameOver(Side::None);
         }
     }
     _turn = _turn == Side::White ? Side::Black : Side::White;

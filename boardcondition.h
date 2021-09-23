@@ -74,7 +74,6 @@ private:
     QVector<Square *> _unsafeForWhiteSquares;
     QVector<Square *> _unsafeForBlackSquares;
     QVector<Square *> _kingCheckers;
-    //QVector<BoundedPiece> _bounded;
     std::map<unsigned int, Square *> _pieces;
     std::map<unsigned int, QVector<Square *>> _availableSquares;
     Square *_selected;
