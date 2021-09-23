@@ -190,7 +190,6 @@ void BoardCondition::processBoard(ChessMatrix &matrix, Move *last)
             _bKingMoved = true;
             _bShortCastlesPossible = false;
             _bLongCastlesPossible = false;
-            return;
         }
         if (_lastMove->pieceID() == _wLongRockID || _wLongRockID == ID::NoID) {
             _wLongRockMoved = true;
