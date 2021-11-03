@@ -19,6 +19,9 @@ class Board : public QWidget
 
 public:
     explicit Board(QWidget *parent = nullptr);
+    ~Board();
+
+    void reset();
 
 public slots:
     void squarePressed(Square *sqr, QMouseEvent *event);

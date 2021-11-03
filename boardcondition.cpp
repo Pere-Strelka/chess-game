@@ -10,8 +10,33 @@ BoardCondition::BoardCondition()
       _bLongRockMoved{ false }, _bShortRockMoved{ false },
       _wKingID{ ID::NoID }, _bKingID{ ID::NoID },
       _wLongRockID{ ID::NoID }, _wShortRockID{ ID::NoID },
-      _bLongRockID{ ID::NoID }, _bShortRockID{ ID::NoID }
+      _bLongRockID{ ID::NoID }, _bShortRockID{ ID::NoID },
+      _turn{ Side::None }
 {}
+
+void BoardCondition::nullify()
+{
+    _protectedSquares.clear();
+    _unsafeForBlackSquares.clear();
+    _unsafeForWhiteSquares.clear();
+    _kingCheckers.clear();
+    _pieces.clear();
+    _availableSquares.clear();
+    _selected = nullptr;
+    _lastMove = nullptr;
+    _enPessantCase.setNull();
+    _wKingUnderCheck = false; _bKingUnderCheck = false;
+    _wCheckmate = false; _bCheckmate = false;
+    _wLongCastlesPossible = false; _wShortCastlesPossible = false;
+    _bLongCastlesPossible = false; _bShortCastlesPossible = false;
+    _wKingMoved = false; _bKingMoved = false;
+    _wLongRockMoved = false; _wShortRockMoved = false;
+    _bLongRockMoved = false; _bShortRockMoved = false;
+    _wKingID = ID::NoID; _bKingID = ID::NoID;
+    _wLongRockID = ID::NoID; _wShortRockID = ID::NoID;
+    _bLongRockID = ID::NoID; _bShortRockID = ID::NoID;
+    _turn = Side::None;
+}
 
 void BoardCondition::setSelected(Square *sqr)
 {

@@ -14,17 +14,29 @@ Board::Board(QWidget *parent) : QWidget(parent), _painter{ new QPainter() }
 
     setFixedSize(1000, 1000);
 
+    loadIcons();
+
+    reset();
+
+    QObject::connect(this, &Board::newMove, &_condition, &BoardCondition::processBoard);
+    QObject::connect(&_condition, &BoardCondition::gameOver, this, &Board::processCheckmate);
+}
+
+Board::~Board() { delete _painter; }
+
+void Board::reset()
+{
+    _condition.nullify();
+    _pieceHolder.clear();
+    _history.clear();
+
     for (int x = 0; x < 8; x++) {
         for (int y = 0; y < 8; y++) {
             _matrix(x, y) = Square(x, y, ((y % 2 == 0 && x % 2 == 0) || (y % 2 != 0 && x % 2 != 0)) ? _whiteColor : _blackColor);
         }
     }
 
-    loadIcons();
     initPieces();
-
-    QObject::connect(this, &Board::newMove, &_condition, &BoardCondition::processBoard);
-    QObject::connect(&_condition, &BoardCondition::gameOver, this, &Board::processCheckmate);
 }
 
 void Board::squarePressed(Square *sqr, QMouseEvent *event)

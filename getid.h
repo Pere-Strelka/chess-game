@@ -3,7 +3,7 @@
 
 class ID
 {
-public:
+public: 
    static unsigned int getNew() { static int id = -1; return ++id;  }
    static const unsigned int NoID = 31946184;
 };

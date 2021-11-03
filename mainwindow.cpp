@@ -11,15 +11,21 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     setWindowTitle("Chess");
 
-    Board *board = new Board(this);
+    _board = new Board(this);
+
+    auto newGame = [this]() {
+        _board->reset();
+    };
+
+    ui->menubar->addMenu("Menu")->addAction("New game", newGame);
 
     setMinimumSize(400, 400);
     setMaximumSize(1000, 1000);
 
-    this->setCentralWidget(board);
+    this->setCentralWidget(_board);
 
     QTimer *timer = new QTimer(this);
-    connect(timer, &QTimer::timeout, board, &Board::updateBoard);
+    connect(timer, &QTimer::timeout, _board, &Board::updateBoard);
     timer->start(20);
 }
 

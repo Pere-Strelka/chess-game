@@ -29,6 +29,8 @@ class BoardCondition : public QObject
 public:
     BoardCondition();
 
+    void nullify();
+
     void initCondition(ChessMatrix &matrix);
 
     // setters

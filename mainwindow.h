@@ -7,6 +7,8 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
+class Board;
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -17,6 +19,7 @@ public:
 
 private:
     Ui::MainWindow *ui;
+    Board *_board;
 };
 
 #endif // MAINWINDOW_H
