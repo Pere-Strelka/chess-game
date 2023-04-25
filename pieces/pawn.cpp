@@ -1,7 +1,7 @@
 #include "pawn.h"
-#include "square.h"
-#include "boardcondition.h"
-#include "board.h"
+#include "../square.h"
+#include "../boardcondition.h"
+#include "../board.h"
 
 Pawn::Pawn(Side side, QSvgWidget *parent) : Piece{ side, parent }
 {

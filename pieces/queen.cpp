@@ -1,8 +1,8 @@
 #include "queen.h"
 #include "bishop.h"
 #include "rock.h"
-#include "square.h"
-#include "boardcondition.h"
+#include "../square.h"
+#include "../boardcondition.h"
 
 Queen::Queen(Side side, QSvgWidget *parent) : Piece{ side, parent }
 {

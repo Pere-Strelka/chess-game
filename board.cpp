@@ -11,6 +11,7 @@ Board::Board(QWidget *parent) : QWidget(parent), _painter{ new QPainter() }
     _grayMarkColor = QColor(149, 165, 166, 100);
     _blueForSelectedColor = QColor(9, 132, 227);
     _redForCheckColor = QColor(214, 48, 49);
+    _outlineWidth = 2.5f;
 
     setFixedSize(1000, 1000);
 
@@ -49,10 +50,10 @@ void Board::squarePressed(Square *sqr, QMouseEvent *event)
     }
 
     auto processMove = [&sqr, this] () {
-        unsigned int id = _matrix(sqr->x(), sqr->y()).getPieceFrom(_condition.selected());
+        unsigned int targetID = _matrix(sqr->x(), sqr->y()).getPieceFrom(_condition.selected());
         _history.push_back(Move(_condition.selected()->coords(), _matrix(sqr->x(), sqr->y()).coords(),
                 _matrix(sqr->x(), sqr->y()).piece(), _matrix(sqr->x(), sqr->y()).id(),
-                /* is move attacking */ (id == ID::NoID ? false : true), id));
+                /* is move attacking */ (targetID == ID::NoID ? false : true), targetID));
     };
 
     auto processEnPessant = [&sqr, this] () {
@@ -83,8 +84,13 @@ void Board::squarePressed(Square *sqr, QMouseEvent *event)
     };
 
     // this block processes move and calls BoardCondition::processBoard() or sets the selected square if there's no yet
+
+    // on move (when there's already a square selected and second selected is correct square)
     if (_condition.isSquareSelected() && _condition.availableSquaresFor(_condition.selected()).contains(sqr)) {
         if (_condition.selected()->piece()->type() == Piece::Type::Pawn) {
+
+            // if the moving piece is a pawn and _condition says there can be an en pessant,
+            // then we check for the vertical coord
             if (!_condition.enPessant().isNull() && sqr->x() == _condition.enPessant().x() &&
                 _condition.selected() == _condition.enPessant().pawn())
                 processEnPessant();
@@ -114,24 +120,15 @@ void Board::squarePressed(Square *sqr, QMouseEvent *event)
 
 void Board::processCheckmate(Side won)
 {
-    switch (won)
-    {
-    case Side::White:
-        _gameOverText = "White wins!";
-        return;
-    case Side::Black:
-        _gameOverText = "Black wins!";
-    case Side::None:
-        _gameOverText = "Stalemate";
-    }
+    _gameOverText = _gameOverTexts[won];
 }
 
 void Board::mousePressEvent(QMouseEvent *event)
 {
     if (_condition.isCheckmate())
         return;
-    int xSqr = qFloor(event->position().x() / _squareWidth);
-    int ySqr = qFloor(event->position().y() / _squareWidth);
+    int xSqr = qFloor( (event->position().x() - _automaticMarginX) / _squareWidth );
+    int ySqr = qFloor( (event->position().y() - _automaticMarginY) / _squareWidth);
     squarePressed(&_matrix(xSqr, ySqr), event);
 }
 
@@ -144,28 +141,30 @@ void Board::paintEvent(QPaintEvent *event)
 
 void Board::paint(QPainter *painter, QPaintEvent *event)
 {
-    // this lamda draws border within given square (is used for selected square and for highlighting checked king)
-    auto paintBorders = [painter, this] (Square *square) {
-        int xOffset = _condition.isCheckmate() ? _squareWidth : 0;
-        QPoint topLeft = QPoint(xOffset + square->x() * _squareWidth, square->y() * _squareWidth);
-        QPoint topRight = QPoint(xOffset + square->x() * _squareWidth + _squareWidth, square->y() * _squareWidth);
-        QPoint bottomLeft = QPoint(xOffset + square->x() * _squareWidth, square->y() * _squareWidth + _squareWidth);
-        QPoint bottomRight = QPoint(xOffset + square->x() * _squareWidth + _squareWidth, square->y() * _squareWidth + _squareWidth);
+    QPen pen(Qt::SolidLine);
 
-        QPoint topTopLeft = QPoint(xOffset + square->x() * _squareWidth + 1, square->y() * _squareWidth + 1);
-        QPoint topTopRight = QPoint(xOffset + square->x() * _squareWidth + _squareWidth - 1, square->y() * _squareWidth + 1);
-        QPoint bottomBottomLeft = QPoint(xOffset + square->x() * _squareWidth + 1, square->y() * _squareWidth + _squareWidth - 1);
-        QPoint bottomBottomRight = QPoint(xOffset + square->x() * _squareWidth + _squareWidth - 1, square->y() * _squareWidth + _squareWidth - 1);
+    // this lamda draws border within given square (is used for selected square and for highlighting checked king)
+    auto paintBorders = [&painter, this] (Square *square) {
+        int xOffset = _automaticMarginX + (_condition.isCheckmate() ? _squareWidth : 0);
+        int yOffset = _automaticMarginY;
+
+        QPoint topLeft = QPoint(xOffset + square->x() * _squareWidth,
+                                yOffset + square->y() * _squareWidth);
+
+        QPoint topRight = QPoint(xOffset + square->x() * _squareWidth + _squareWidth,
+                                 yOffset + square->y() * _squareWidth);
+
+        QPoint bottomLeft = QPoint(xOffset + square->x() * _squareWidth,
+                                   yOffset + square->y() * _squareWidth + _squareWidth);
+
+        QPoint bottomRight = QPoint(xOffset + square->x() * _squareWidth + _squareWidth,
+                                    yOffset + square->y() * _squareWidth + _squareWidth);
 
         QVector<QLine> lines;
         lines.push_back(QLine(topLeft, topRight));
         lines.push_back(QLine(bottomLeft, bottomRight));
         lines.push_back(QLine(topLeft, bottomLeft));
         lines.push_back(QLine(topRight, bottomRight));
-        lines.push_back(QLine(topTopLeft, topTopRight));
-        lines.push_back(QLine(bottomBottomLeft, bottomBottomRight));
-        lines.push_back(QLine(topTopLeft, bottomBottomLeft));
-        lines.push_back(QLine(topTopRight, bottomBottomRight));
         painter->drawLines(lines);
     };
 
@@ -174,38 +173,44 @@ void Board::paint(QPainter *painter, QPaintEvent *event)
 
     // when game's over, label "*side* wins!" appears under the board
     // so we need to draw board differently in this case
+
+    const short c_normalSquareWidthDivider = 8;
+    const short c_gameOverSquareWidthDivider = 10;
+
+    short usedDivider = _condition.isCheckmate() ?
+                            c_gameOverSquareWidthDivider : c_normalSquareWidthDivider;
+
+    _squareWidth = rectangle.width() > rectangle.height() ?
+                       rectangle.height() / usedDivider : rectangle.width() / usedDivider;
+
+    _automaticMarginX = (rectangle.width() - _squareWidth * usedDivider) / 2;
+    _automaticMarginY = (rectangle.height() - _squareWidth * usedDivider) / 2;
+
     if (_condition.isCheckmate()) {
-        _squareWidth = rectangle.width() > rectangle.height() ? rectangle.height() / 10 : rectangle.width() / 10;
         rectangle.setX(_squareWidth);
 
         // drawing the label
-        QPen textPen(_lightTextColor);
+        pen.setColor(_lightTextColor);
         QFont font;
-        QRectF textRect = QRectF(_squareWidth * 1, _squareWidth * 8,
+
+        // params: x, y, width, height
+        QRectF textRect = QRectF(_automaticMarginX + _squareWidth * 1,_automaticMarginY + _squareWidth * 8,
                                  _squareWidth * 8, _squareWidth * 2);
         font.setPointSize(textRect.width() * 0.1);
         painter->setFont(font);
-        painter->setPen(textPen);
+        painter->setPen(pen);
         painter->drawText(textRect, Qt::AlignCenter, _gameOverText);
-    } else {
-        _squareWidth = rectangle.width() > rectangle.height() ? rectangle.height() / 8 : rectangle.width() / 8;
     }
+
 
     // drawing the board
     for (int x = 0; x < 8; x++) {
         for (int y = 0; y < 8; y++) {
-            _matrix(x, y).setRect(QRect(rectangle.x() + x * _squareWidth,
-                                         rectangle.y() + y * _squareWidth,
-                                         _squareWidth, _squareWidth));
+            _matrix(x, y).setRect(QRect(_automaticMarginX + rectangle.x() + x * _squareWidth,
+                                        _automaticMarginY + rectangle.y() + y * _squareWidth,
+                                        _squareWidth, _squareWidth));
             painter->fillRect(_matrix(x, y).rect(), _matrix(x, y).color());
         }
-    }
-
-    // calling paintBoarders if there's selected square
-    if (_condition.selected() != nullptr) {
-        QPen highlight(_blueForSelectedColor);
-        painter->setPen(highlight);
-        paintBorders(_condition.selected());
     }
 
     // calling paint function for each piece
@@ -218,8 +223,8 @@ void Board::paint(QPainter *painter, QPaintEvent *event)
                 else if (_matrix(x, y).piece()->type() == Piece::Type::Rock)
                     widthMultiplier = g_widthMultiplierForRocks;
 
-                int xCoord = rectangle.x() + x * _squareWidth + ((1 - g_pieceSizeMulpitplier * widthMultiplier) / 2 * _squareWidth);
-                int yCoord = rectangle.y() + y * _squareWidth + ((1 - g_pieceSizeMulpitplier) / 2 * _squareWidth);
+                int xCoord = _automaticMarginX + rectangle.x() + x * _squareWidth + ((1 - g_pieceSizeMulpitplier * widthMultiplier) / 2 * _squareWidth);
+                int yCoord = _automaticMarginY + rectangle.y() + y * _squareWidth + ((1 - g_pieceSizeMulpitplier) / 2 * _squareWidth);
                 _matrix(x, y).setRect(QRect(xCoord, yCoord,
                                             _squareWidth * g_pieceSizeMulpitplier * widthMultiplier,
                                             _squareWidth * g_pieceSizeMulpitplier));
@@ -229,16 +234,27 @@ void Board::paint(QPainter *painter, QPaintEvent *event)
     }
 
 
-    // calling paintBoarders if a king is checked
+    // calling paintBorders if a king is checked OR if there's a selected square
     Square *sqrToShowCheck = _condition.king(_condition.whichKingIsUnderCheck());
-    if (sqrToShowCheck != nullptr) {
-        QPen highlight(_redForCheckColor);
-        painter->setPen(highlight);
-        paintBorders(sqrToShowCheck);
+
+    if (sqrToShowCheck != nullptr || _condition.selected() != nullptr) {
+        QPen outline(Qt::SolidLine);
+        outline.setWidth(_outlineWidth);
+
+        if (_condition.selected() != nullptr) {
+            outline.setColor(_blueForSelectedColor);
+            painter->setPen(outline);
+            paintBorders(_condition.selected());
+        }
+        if (sqrToShowCheck != nullptr) {
+            outline.setColor(_redForCheckColor);
+            painter->setPen(outline);
+            paintBorders(sqrToShowCheck);
+        }
     }
 
     // marking available to move squares with a circle
-    QPen pen(_grayMarkColor);
+    pen.setColor(_grayMarkColor);
     painter->setPen(pen);
     QBrush brush(_grayMarkColor);
     painter->setBrush(brush);
@@ -261,14 +277,8 @@ void Board::initPieces()
         short yForPawns =   i ? g_bSecondLine : g_wSecondLine;
         Side side =         i ? Side::Black : Side::White;
 
-        _pieceHolder.push_back(pieceMaker.make(Piece::Type::Rock, side));
-        _pieceHolder.push_back(pieceMaker.make(Piece::Type::Knight, side));
-        _pieceHolder.push_back(pieceMaker.make(Piece::Type::Bishop, side));
-        _pieceHolder.push_back(pieceMaker.make(Piece::Type::Queen, side));
-        _pieceHolder.push_back(pieceMaker.make(Piece::Type::King, side));
-        _pieceHolder.push_back(pieceMaker.make(Piece::Type::Bishop, side));
-        _pieceHolder.push_back(pieceMaker.make(Piece::Type::Knight, side));
-        _pieceHolder.push_back(pieceMaker.make(Piece::Type::Rock, side));
+        for (auto pieceType : _piecesOrder)
+            _pieceHolder.push_back(pieceMaker.make(pieceType, side));
 
         auto it = _pieceHolder.end();
         std::advance(it, -8);

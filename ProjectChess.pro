@@ -5,6 +5,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++17 release
 
+
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
@@ -13,6 +14,7 @@ SOURCES += \
     board.cpp \
     boardcondition.cpp \
     chessmatrix.cpp \
+#    computerai.cpp \
     constants.cpp \
     iconpack.cpp \
     main.cpp \
@@ -26,6 +28,7 @@ SOURCES += \
     pieces/pawn.cpp \
     pieces/queen.cpp \
     pieces/rock.cpp \
+#    position.cpp \
     square.cpp
 
 HEADERS += \
@@ -33,6 +36,7 @@ HEADERS += \
     boardcondition.h \
     chesscases.h \
     chessmatrix.h \
+#    computerai.h \
     constants.h \
     coord.h \
     getid.h \
@@ -47,6 +51,7 @@ HEADERS += \
     pieces/pawn.h \
     pieces/queen.h \
     pieces/rock.h \
+#    position.h \
     side.h \
     square.h
 

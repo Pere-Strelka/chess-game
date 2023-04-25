@@ -1,6 +1,6 @@
 #include "king.h"
-#include "square.h"
-#include "boardcondition.h"
+#include "../square.h"
+#include "../boardcondition.h"
 
 King::King(Side side, QSvgWidget *parent) : Piece{ side, parent }
 {

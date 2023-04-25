@@ -1,6 +1,6 @@
 #include "rock.h"
-#include "square.h"
-#include "boardcondition.h"
+#include "../square.h"
+#include "../boardcondition.h"
 
 Rock::Rock(Side side, QSvgWidget *parent) : Piece{ side, parent }
 {

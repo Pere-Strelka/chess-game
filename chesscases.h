@@ -36,4 +36,5 @@ private:
     Square *_piece;
     Square *_by;
 };
+
 #endif // CHESSCASES_H

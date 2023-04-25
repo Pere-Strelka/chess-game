@@ -272,17 +272,18 @@ void BoardCondition::processBoard(ChessMatrix &matrix, Move *last)
                 _bLongRockID = ID::NoID;
         }
         if (_lastMove->isLongCastles() || _lastMove->isShortCastles()) {
-            short y = _lastMove->side() == Side::White ? g_wFirstLine : g_bFirstLine;
+            bool sideIsWhite = _lastMove->side() == Side::White ? true : false;
+            short y = sideIsWhite ? g_wFirstLine : g_bFirstLine;
             unsigned int rock, king;
             short xRock, xKing;
             if (_lastMove->isLongCastles()) {
-                rock = _lastMove->side() == Side::White ? _wLongRockID : _bLongRockID;
-                king = _lastMove->side() == Side::White ? _wKingID : _bKingID;
+                rock = sideIsWhite ? _wLongRockID : _bLongRockID;
+                king = sideIsWhite ? _wKingID : _bKingID;
                 xRock = 3;
                 xKing = 2;
             } else {
-                rock = _lastMove->side() == Side::White ? _wShortRockID : _bShortRockID;
-                king = _lastMove->side() == Side::White ? _wKingID : _bKingID;
+                rock = sideIsWhite ? _wShortRockID : _bShortRockID;
+                king = sideIsWhite ? _wKingID : _bKingID;
                 xRock = 5;
                 xKing = 6;
             }

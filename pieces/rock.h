@@ -1,7 +1,7 @@
 #ifndef ROCK_H
 #define ROCK_H
 
-#include "piece.h"
+#include "../piece.h"
 
 class Rock : public Piece
 {

@@ -37,7 +37,10 @@ public:
     QColor color() const                            { return _color; }
     QRect rect() const                              { return _rect; }
     QPoint center() const                           { return _rect.center(); }
+
+    // will return nullptr if there is no piece
     Piece *piece() const                            { return _piece; }
+    Piece::Type pieceType() const                   { return _hasPiece ? _piece->type() : Piece::Type::None; }
 
     // this function returns id of this square's previous piece if there was one and ID::NoID if there wasn't
     unsigned int getPieceFrom(Square *other);

@@ -83,8 +83,8 @@ private:
     bool _wKingUnderCheck, _bKingUnderCheck, _wCheckmate, _bCheckmate,
          _wLongCastlesPossible, _wShortCastlesPossible, _bLongCastlesPossible, _bShortCastlesPossible,
          _wKingMoved, _bKingMoved, _wLongRockMoved, _wShortRockMoved, _bLongRockMoved, _bShortRockMoved;
-    Side _turn;
     unsigned int _wKingID, _bKingID, _wLongRockID, _wShortRockID, _bLongRockID, _bShortRockID;
+    Side _turn;
 
     // en pessant variable
     EnPessant _enPessantCase;

@@ -1,6 +1,6 @@
 #include "knight.h"
-#include "square.h"
-#include "boardcondition.h"
+#include "../square.h"
+#include "../boardcondition.h"
 
 Knight::Knight(Side side, QSvgWidget *parent) : Piece{ side, parent }
 {
